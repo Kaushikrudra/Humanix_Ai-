@@ -1,0 +1,44 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("external") // "internal" or "external"
+  plan      String   @default("free") // "free", "starter", "pro"
+  credits   Int      @default(30)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions   CreditTransaction[]
+  contentHistory ContentHistory[]
+}
+
+model CreditTransaction {
+  id        String   @id @default(uuid())
+  userId    String
+  amount    Int // Positive for top-up, negative for usage
+  type      String // "usage", "subscription", "bonus"
+  notes     String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model ContentHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  tool      String // "content-generator", "humanizer", "paraphraser", "ai-detector"
+  input     String
+  output    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
